@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Series Architecture Wizard</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #d2a8ff;
+      --accent4: #ffa657;
+      --danger: #f85149;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --text3: #b1bac4;
+      --radius: 10px;
+      --transition: 0.2s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 50%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 24px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% -20%, rgba(88,166,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    header h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #58a6ff, #d2a8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text2);
+      font-size: 1rem;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(88,166,255,0.12);
+      border: 1px solid rgba(88,166,255,0.3);
+      color: var(--accent);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 99px;
+      margin-bottom: 14px;
+    }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 20px 0; }
+
+    /* ── PROGRESS ── */
+    .progress-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .progress-steps {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+    }
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--surface2);
+      transition: background var(--transition);
+    }
+    .step-dot.active { background: var(--accent); }
+    .step-dot.done { background: var(--accent2); }
+    .progress-label {
+      font-size: 0.78rem;
+      color: var(--text2);
+      white-space: nowrap;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+      transition: box-shadow var(--transition);
+    }
+    .card:hover { box-shadow: 0 0 0 1px rgba(88,166,255,0.1); }
+
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+    .card h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: var(--text);
+    }
+
+    /* ── OPTION GRID ── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .option-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      cursor: pointer;
+      text-align: left;
+      transition: all var(--transition);
+      color: var(--text);
+      font-size: 0.88rem;
+    }
+    .option-btn:hover {
+      border-color: var(--accent);
+      background: rgba(88,166,255,0.07);
+    }
+    .option-btn.selected {
+      border-color: var(--accent);
+      background: rgba(88,166,255,0.12);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .option-btn .opt-icon { font-size: 1.2rem; margin-bottom: 4px; display: block; }
+    .option-btn .opt-label { display: block; font-weight: 600; }
+    .option-btn .opt-desc { display: block; font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
+
+    /* ── NAVIGATION ── */
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      gap: 12px;
+    }
+    .btn {
+      padding: 10px 22px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all var(--transition);
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+    .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+    }
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-success {
+      background: var(--accent2);
+      color: #0d1117;
+    }
+    .btn-success:hover { opacity: 0.85; }
+
+    /* ── RESULT SECTION ── */
+    .result-section { display: none; }
+    .result-section.visible { display: block; }
+
+    .arch-hero {
+      background: linear-gradient(135deg, #1a1f2e, #161b22);
+      border: 1px solid rgba(88,166,255,0.25);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .arch-hero::before {
+      content: '';
+      position: absolute; top: -30px; right: -30px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(210,168,255,0.12) 0%, transparent 70%);
+    }
+    .arch-name {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #58a6ff, #d2a8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .arch-subtitle {
+      color: var(--text2);
+      font-size: 0.92rem;
+      margin-bottom: 20px;
+    }
+    .arch-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    .tag-blue { border-color: rgba(88,166,255,0.4); color: var(--accent); background: rgba(88,166,255,0.08); }
+    .tag-green { border-color: rgba(63,185,80,0.4); color: var(--accent2); background: rgba(63,185,80,0.08); }
+    .tag-purple { border-color: rgba(210,168,255,0.4); color: var(--accent3); background: rgba(210,168,255,0.08); }
+    .tag-orange { border-color: rgba(255,166,87,0.4); color: var(--accent4); background: rgba(255,166,87,0.08); }
+    .tag-red { border-color: rgba(248,81,73,0.4); color: var(--danger); background: rgba(248,81,73,0.08); }
+
+    /* ── METRICS GRID ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .metric-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .metric-label { font-size: 0.72rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .metric-value { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+
+    /* ── ADR ── */
+    .adr-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .adr-block-header {
+      padding: 14px 20px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .adr-content {
+      padding: 20px;
+    }
+    pre.adr-code {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: var(--text3);
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    /* ── BASELINE ROADMAP ── */
+    .baseline-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .baseline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .baseline-step:last-child { border-bottom: none; }
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-num.done-s { background: rgba(63,185,80,0.15); color: var(--accent2); border: 1px solid rgba(63,185,80,0.3); }
+    .step-num.target-s { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+    .step-num.todo-s { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+    .step-info h4 { font-size: 0.92rem; font-weight: 700; margin-bottom: 2px; }
+    .step-info p { font-size: 0.8rem; color: var(--text2); }
+
+    /* ── ALTERNATIVES ── */
+    .alt-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .alt-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .alt-card h4 { font-size: 0.92rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .alt-card p { font-size: 0.8rem; color: var(--text2); }
+    .alt-card .alt-why { font-size: 0.75rem; margin-top: 8px; padding: 6px 10px; border-radius: 6px; }
+
+    /* ── ANTIPATTERNS ── */
+    .antipattern-list { display: flex; flex-direction: column; gap: 10px; }
+    .antipattern-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px;
+      background: rgba(248,81,73,0.05);
+      border: 1px solid rgba(248,81,73,0.2);
+      border-radius: 8px;
+    }
+    .antipattern-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .antipattern-item strong { font-size: 0.88rem; display: block; margin-bottom: 2px; }
+    .antipattern-item p { font-size: 0.78rem; color: var(--text2); }
+
+    /* ── DOWNLOAD BTN ── */
+    .download-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    /* ── RESTART ── */
+    .restart-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 8px 18px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all var(--transition);
+    }
+    .restart-btn:hover { border-color: var(--text2); color: var(--text); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.35s ease forwards; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+      .options-grid { grid-template-columns: 1fr 1fr; }
+      .alt-cards { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">⚡ Skill: designing-ts-architectures</div>
+  <h1>Time Series Architecture Wizard</h1>
+  <p>Describe your forecasting problem and get an evidence-based architecture recommendation + Architecture Decision Record.</p>
+</header>
+
+<div class="container">
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-steps" id="progressSteps"></div>
+    <span class="progress-label" id="progressLabel">Step 1 of 8</span>
+  </div>
+
+  <!-- QUESTIONS SECTION -->
+  <div id="questionsSection">
+    <div class="card fade-up" id="questionCard">
+      <div class="card-title" id="qStep"></div>
+      <h2 id="qText"></h2>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="nav-row">
+        <button class="btn btn-ghost" id="btnBack" onclick="goBack()">← Back</button>
+        <button class="btn btn-primary" id="btnNext" onclick="goNext()" disabled>Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT SECTION -->
+  <div class="result-section" id="resultSection"></div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  QUESTIONS
+// ─────────────────────────────────────────────
+const QUESTIONS = [
+  {
+    key: 'horizon',
+    label: 'Forecast Horizon',
+    text: 'How many steps ahead do you need to forecast?',
+    options: [
+      { value: 'short',  icon: '⚡', label: 'Short  (≤ 24 steps)',   desc: 'Next hour, next day, etc.' },
+      { value: 'medium', icon: '📅', label: 'Medium  (25–168 steps)', desc: 'Days to a week out' },
+      { value: 'long',   icon: '🔭', label: 'Long  (> 168 steps)',    desc: 'Weeks, months, quarters' },
+    ]
+  },
+  {
+    key: 'frequency',
+    label: 'Data Frequency',
+    text: 'What is the temporal resolution of your data?',
+    options: [
+      { value: 'subhourly', icon: '⏱️', label: 'Sub-hourly',   desc: 'Minutes, seconds' },
+      { value: 'hourly',    icon: '🕐', label: 'Hourly',        desc: 'Every hour' },
+      { value: 'daily',     icon: '📆', label: 'Daily',         desc: 'Once per day' },
+      { value: 'weekly+',   icon: '📊', label: 'Weekly/Monthly', desc: 'Lower frequency' },
+    ]
+  },
+  {
+    key: 'seriesCount',
+    label: 'Series Count',
+    text: 'How many time series do you need to forecast simultaneously?',
+    options: [
+      { value: 'single',   icon: '1️⃣', label: 'Single series',   desc: '1–5 series' },
+      { value: 'small',    icon: '📦', label: 'Small batch',      desc: '6–100 series' },
+      { value: 'large',    icon: '🏭', label: 'Large scale',      desc: '100+ series' },
+    ]
+  },
+  {
+    key: 'covariates',
+    label: 'Covariates / Features',
+    text: 'What external information is available to your model?',
+    options: [
+      { value: 'none',          icon: '🔲', label: 'None',             desc: 'Only the target series' },
+      { value: 'known_future',  icon: '🔮', label: 'Known-future',     desc: 'Calendars, holidays, promos' },
+      { value: 'past_only',     icon: '📜', label: 'Past-only',        desc: 'External lags known up to t' },
+      { value: 'static_meta',   icon: '🏷️', label: 'Static metadata',  desc: 'Category, region, product type' },
+    ]
+  },
+  {
+    key: 'output',
+    label: 'Output Type',
+    text: 'What kind of forecast output do you need?',
+    options: [
+      { value: 'point',        icon: '🎯', label: 'Point forecast',     desc: 'Single predicted value' },
+      { value: 'quantile',     icon: '📐', label: 'Quantile / intervals', desc: 'e.g. P10, P50, P90' },
+      { value: 'distribution', icon: '🔔', label: 'Full distribution',  desc: 'PDF or sample paths' },
+    ]
+  },
+  {
+    key: 'interpretability',
+    label: 'Interpretability',
+    text: 'How important is model explainability to stakeholders?',
+    options: [
+      { value: 'none',    icon: '🤖', label: 'Not required',   desc: 'Black box is fine' },
+      { value: 'partial', icon: '🔍', label: 'Partial',        desc: 'Feature importance useful' },
+      { value: 'full',    icon: '📖', label: 'Full required',  desc: 'Decomposed components needed' },
+    ]
+  },
+  {
+    key: 'latency',
+    label: 'Latency Constraint',
+    text: 'What are the inference latency requirements?',
+    options: [
+      { value: 'batch',     icon: '🗂️', label: 'Batch',         desc: 'Minutes to hours is fine' },
+      { value: 'nearrt',   icon: '⚡', label: 'Near-real-time', desc: '< 1 second per request' },
+      { value: 'realtime', icon: '🚀', label: 'Real-time',      desc: '< 100 ms per request' },
+    ]
+  },
+  {
+    key: 'dataVolume',
+    label: 'Data Volume',
+    text: 'How many time steps are available per series for training?',
+    options: [
+      { value: 'tiny',   icon: '🌱', label: '< 500 steps',      desc: 'Very limited history' },
+      { value: 'medium', icon: '🌿', label: '500 – 100K steps',  desc: 'Moderate history' },
+      { value: 'large',  icon: '🌳', label: '> 100K steps',      desc: 'Rich historical data' },
+    ]
+  },
+];
+
+let answers = {};
+let currentQ = 0;
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function renderQuestion() {
+  const q = QUESTIONS[currentQ];
+  document.getElementById('qStep').textContent = `Question ${currentQ + 1} of ${QUESTIONS.length} · ${q.label}`;
+  document.getElementById('qText').textContent = q.text;
+
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn' + (answers[q.key] === opt.value ? ' selected' : '');
+    btn.innerHTML = `<span class="opt-icon">${opt.icon}</span><span class="opt-label">${opt.label}</span><span class="opt-desc">${opt.desc}</span>`;
+    btn.onclick = () => selectOption(q.key, opt.value);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('btnBack').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+  document.getElementById('btnNext').disabled = !answers[q.key];
+  document.getElementById('btnNext').textContent = currentQ === QUESTIONS.length - 1 ? 'See Results ✨' : 'Next →';
+
+  renderProgress();
+}
+
+function renderProgress() {
+  const stepsEl = document.getElementById('progressSteps');
+  stepsEl.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i < currentQ ? ' done' : i === currentQ ? ' active' : '');
+    stepsEl.appendChild(dot);
+  });
+  document.getElementById('progressLabel').textContent = `Step ${currentQ + 1} of ${QUESTIONS.length}`;
+}
+
+function selectOption(key, value) {
+  answers[key] = value;
+  renderQuestion();
+}
+
+function goNext() {
+  if (!answers[QUESTIONS[currentQ].key]) return;
+  if (currentQ < QUESTIONS.length - 1) {
+    currentQ++;
+    document.getElementById('questionCard').classList.remove('fade-up');
+    void document.getElementById('questionCard').offsetWidth;
+    document.getElementById('questionCard').classList.add('fade-up');
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function goBack() {
+  if (currentQ > 0) {
+    currentQ--;
+    renderQuestion();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  ARCHITECTURE ENGINE
+// ─────────────────────────────────────────────
+function recommend(a) {
+  // Decision logic based on skill's decision table
+  const { horizon, seriesCount, covariates, output, interpretability, latency, dataVolume } = a;
+
+  // Zero/few-shot: no direct trigger here since user has data volume info
+  // Limited data → N-HiTS or Prophet
+  if (dataVolume === 'tiny') {
+    return {
+      primary: 'N-HiTS + Augmentation',
+      alt1: { name: 'Prophet + Residuals', why: 'Classical baseline with uncertainty, very interpretable' },
+      alt2: { name: 'DLinear', why: 'Simple linear model that often wins with low data' },
+      tagline: 'Hierarchical interpolation beats heavy models when data is scarce.',
+      tags: ['Low-Data Regime', 'Hierarchical', 'Multi-scale'],
+      strengths: ['Works with < 500 training points', 'Multi-resolution decomposition', 'Explicit seasonality', 'No GPU needed'],
+      risks: ['May underfit complex patterns', 'Needs careful augmentation strategy'],
+      hyperparams: { stacks: '3', pooling_modes: '"max","average","min"', 'n_freq_downsample': '[168,24,1]', dropout: '0.1' },
+      metric: { primary: 'MASE < 1.2 vs Seasonal Naïve', secondary: 'sMAPE < 15%', guardrail: 'No negative MASE' },
+      complexity: 'Low',
+      gpuNeeded: false,
+      library: 'neuralforecast (NeuralForecast.NHiTS)',
+    };
+  }
+
+  // Real-time / latency sensitive
+  if (latency === 'realtime' || (latency === 'nearrt' && seriesCount !== 'large')) {
+    return {
+      primary: 'DLinear / NLinear',
+      alt1: { name: 'Optimized N-HiTS', why: 'Slightly more expressive, still fast with ONNX export' },
+      alt2: { name: 'LightGBM (lag features)', why: 'Ultra-fast tree-based model, great latency baseline' },
+      tagline: 'Linear decomposition — surprisingly powerful, microsecond inference.',
+      tags: ['Real-Time', 'Linear', 'Low-Latency', 'Production-Ready'],
+      strengths: ['Sub-millisecond inference', 'Easy to deploy', 'Strong long-range performance', 'No complex dependencies'],
+      risks: ['Misses nonlinear cross-series patterns', 'Limited covariate support'],
+      hyperparams: { individual: 'True', moving_avg: '25', kernel_size: '25' },
+      metric: { primary: 'MASE ≤ 1.0 vs Seasonal Naïve', secondary: 'P99 latency < 100ms', guardrail: 'CPU memory < 500MB' },
+      complexity: 'Very Low',
+      gpuNeeded: false,
+      library: 'pytorch-forecasting or custom PyTorch',
+    };
+  }
+
+  // Probabilistic output
+  if (output === 'distribution') {
+    if (seriesCount === 'large') {
+      return {
+        primary: 'DeepAR',
+        alt1: { name: 'TFT', why: 'Quantile output + interpretability when covariates are rich' },
+        alt2: { name: 'TimeGrad', why: 'Diffusion-based, best-in-class distribution quality' },
+        tagline: 'Autoregressive recurrent model trained jointly across all series.',
+        tags: ['Probabilistic', 'Autoregressive', 'Global Model', 'Scalable'],
+        strengths: ['Native distributional output', 'Shares info across series', 'Handles cold-start via embeddings', 'GluonTS integration'],
+        risks: ['Autoregressive inference is slow', 'Sensitive to outliers in training'],
+        hyperparams: { num_layers: '2', hidden_size: '64', dropout_rate: '0.1', context_length: '2× prediction_length' },
+        metric: { primary: 'CRPS < 0.15', secondary: 'P90 coverage > 88%', guardrail: 'Mean bias < 2%' },
+        complexity: 'Medium',
+        gpuNeeded: true,
+        library: 'GluonTS (mx.gluon or PyTorch backend)',
+      };
+    } else {
+      return {
+        primary: 'TFT (Temporal Fusion Transformer)',
+        alt1: { name: 'DeepAR', why: 'Simpler, scales better to very large series counts' },
+        alt2: { name: 'N-HiTS + quantile loss', why: 'Faster convergence, good quantile calibration' },
+        tagline: 'Attention-based with full quantile output and interpretable attention weights.',
+        tags: ['Quantile Output', 'Attention', 'Interpretable', 'Multi-horizon'],
+        strengths: ['Rich covariate support (static, past, future)', 'Quantile/distributional output', 'Variable selection networks', 'Temporal self-attention = long-range dependencies'],
+        risks: ['Slower to train than linear models', 'Needs careful covariate engineering', 'Large hyperparameter space'],
+        hyperparams: { hidden_size: '64–512', attention_head_size: '4', dropout: '0.1–0.3', lstm_layers: '2' },
+        metric: { primary: 'P90 coverage > 88%', secondary: 'MASE < 1.1', guardrail: 'Quantile loss P50 < Naïve P50 loss' },
+        complexity: 'High',
+        gpuNeeded: true,
+        library: 'pytorch-forecasting (TemporalFusionTransformer)',
+      };
+    }
+  }
+
+  // High interpretability
+  if (interpretability === 'full') {
+    return {
+      primary: 'TFT (Temporal Fusion Transformer)',
+      alt1: { name: 'N-BEATS (interpretable)', why: 'Trend + seasonality decomposition, fast training' },
+      alt2: { name: 'Prophet + residuals', why: 'Classical, fully decomposed, stakeholder-friendly' },
+      tagline: 'Variable selection + temporal attention = full model transparency.',
+      tags: ['Full Interpretability', 'Variable Selection', 'Attention Weights'],
+      strengths: ['Attention weights show which time steps matter', 'Variable importance scores', 'Decomposed components', 'State-of-the-art with covariates'],
+      risks: ['Complex to tune', 'Overkill for simple univariate series'],
+      hyperparams: { hidden_size: '128', attention_head_size: '4', dropout: '0.1', lstm_layers: '2' },
+      metric: { primary: 'MASE < 1.1', secondary: 'Variable importance Gini > 0.15', guardrail: 'No single variable dominates > 80%' },
+      complexity: 'High',
+      gpuNeeded: true,
+      library: 'pytorch-forecasting',
+    };
+  }
+
+  // Multivariate cross-series / large scale
+  if (seriesCount === 'large' && horizon !== 'short') {
+    return {
+      primary: 'iTransformer',
+      alt1: { name: 'PatchTST', why: 'Patch-based Transformer, channel-independent, strong benchmark results' },
+      alt2: { name: 'Crossformer', why: 'Explicit cross-series attention, good for highly correlated groups' },
+      tagline: 'Inverted Transformer — attends across series, not time. Dominant on long multivariate benchmarks.',
+      tags: ['Multivariate', 'Cross-Series Attention', 'Long Horizon', 'SOTA 2024'],
+      strengths: ['Captures cross-series correlations natively', 'Linear complexity per series', 'Top results on ETTh, Weather, Traffic benchmarks', 'Scales to 1000s of series'],
+      risks: ['Requires all series at every step', 'Not suitable for sparse/ragged series', 'Needs GPU for large scale'],
+      hyperparams: { d_model: '128', n_heads: '8', e_layers: '3', d_ff: '512', dropout: '0.1' },
+      metric: { primary: 'MSE < Informer baseline', secondary: 'MAE on multivariate benchmark < PatchTST', guardrail: 'No negative transfer vs univariate baseline' },
+      complexity: 'Medium-High',
+      gpuNeeded: true,
+      library: 'Time-Series-Library (TSLib) or custom',
+    };
+  }
+
+  // Long horizon, point forecast
+  if (horizon === 'long') {
+    return {
+      primary: 'PatchTST',
+      alt1: { name: 'iTransformer', why: 'Better when cross-series correlations matter' },
+      alt2: { name: 'N-HiTS', why: 'Hierarchical interpolation excels at very long horizons without Transformers' },
+      tagline: 'Patch-based Transformer — processes time as "words" for efficient long-range modeling.',
+      tags: ['Long Horizon', 'Patch Attention', 'Channel-Independent', 'Efficient'],
+      strengths: ['O(L/P²) complexity vs O(L²)', 'Strong benchmark on long-range ETT datasets', 'Pre-trained checkpoints available', 'Local + global context'],
+      risks: ['Channel-independent assumption ignores cross-series info', 'Patch size needs tuning'],
+      hyperparams: { patch_len: '16', stride: '8', d_model: '128', n_heads: '16', e_layers: '3' },
+      metric: { primary: 'MSE < Autoformer baseline', secondary: 'MAE < PatchTST paper benchmark', guardrail: 'Inference < 500ms/batch' },
+      complexity: 'Medium',
+      gpuNeeded: true,
+      library: 'Time-Series-Library (TSLib)',
+    };
+  }
+
+  // Short horizon, univariate
+  if (horizon === 'short' && seriesCount === 'single') {
+    return {
+      primary: 'N-BEATS / N-HiTS',
+      alt1: { name: 'DLinear', why: 'Even simpler, often competitive for pure univariate' },
+      alt2: { name: 'TFT', why: 'When covariates are rich and interpretability matters' },
+      tagline: 'Residual stack with Fourier/polynomial basis — purpose-built for univariate forecasting.',
+      tags: ['Univariate', 'Short Horizon', 'Fast Training', 'M4 Champion'],
+      strengths: ['Winner of M4 competition', 'Interpretable basis expansions', 'No covariate engineering', 'Fast to iterate'],
+      risks: ['Does not leverage cross-series info', 'Less effective for long horizons'],
+      hyperparams: { stacks: '30', layers: '4', layer_width: '512', basis: '"generic" or "interpretable"' },
+      metric: { primary: 'sMAPE < 10%', secondary: 'MASE < 1.0', guardrail: 'Train time < 2h on single GPU' },
+      complexity: 'Low-Medium',
+      gpuNeeded: false,
+      library: 'neuralforecast (NBEATS)',
+    };
+  }
+
+  // Default / medium balanced case
+  return {
+    primary: 'N-HiTS',
+    alt1: { name: 'TFT', why: 'Richer covariate support and probabilistic output when needed' },
+    alt2: { name: 'DLinear', why: 'Simpler baseline that often matches complex models' },
+    tagline: 'Hierarchical interpolation network — fast, accurate, versatile across horizons.',
+    tags: ['Versatile', 'Multi-Scale', 'Efficient', 'Good Default'],
+    strengths: ['Multi-rate sampling = efficient long-range', 'Lower compute than Transformers', 'Strong M4/M5 results', 'Good for batch production'],
+    risks: ['Univariate by default', 'Needs careful stack configuration'],
+    hyperparams: { stacks: '3', n_freq_downsample: '[168,24,1]', mlp_units: '[[512,512],[512,512],[512,512]]', dropout: '0.1' },
+    metric: { primary: 'sMAPE < 12%', secondary: 'MASE < 1.1', guardrail: 'P50 < Seasonal Naïve P50' },
+    complexity: 'Low-Medium',
+    gpuNeeded: false,
+    library: 'neuralforecast (NHiTS)',
+  };
+}
+
+function getBaselineSteps(rec) {
+  return [
+    { num: '1', label: 'Seasonal Naïve', desc: 'Last observed seasonal value. Your floor — beat this first.', status: 'todo-s' },
+    { num: '2', label: 'Statistical: ETS / ARIMA', desc: 'Exponential smoothing or ARIMA. Fast, interpretable, strong baseline.', status: 'todo-s' },
+    { num: '3', label: 'ML: LightGBM + lags', desc: 'Gradient boosting with lag features. Often beats DL on tabular TS.', status: 'todo-s' },
+    { num: '4', label: 'Simple DL: DLinear', desc: 'Linear decomposition. Surprisingly competitive on most benchmarks.', status: 'todo-s' },
+    { num: '5', label: rec.primary + ' ← TARGET', desc: 'Your recommended architecture. Only adopt if Step 4 shows measurable gain.', status: 'target-s' },
+  ];
+}
+
+function getAntiPatterns(a, rec) {
+  const patterns = [];
+  if (a.horizon === 'short' && rec.primary.includes('Transformer')) {
+    patterns.push({ icon: '⚠️', title: 'Short horizon + Transformer', desc: 'Transformers rarely win on short horizons. Validate DLinear first.' });
+  }
+  if (a.output === 'point' && rec.primary.includes('TFT')) {
+    patterns.push({ icon: '⚠️', title: 'TFT for point-only output', desc: 'TFT shines with quantile output. For point-only, N-HiTS is simpler and faster.' });
+  }
+  if (a.dataVolume === 'large' && a.seriesCount === 'single') {
+    patterns.push({ icon: '🚨', title: 'Single series with large data', desc: 'Consider classical state-space models (TBATS/ARIMA) — DL may overfit a single long series.' });
+  }
+  if (a.covariates === 'none' && rec.primary === 'TFT') {
+    patterns.push({ icon: '⚠️', title: 'TFT without covariates', desc: 'TFT's main advantage is covariate handling. Without features, N-BEATS is simpler and often better.' });
+  }
+  patterns.push({ icon: '🔧', title: 'Always use MSE loss', desc: 'For skewed distributions, use quantile loss or CRPS. MSE penalizes peaks and outliers too heavily.' });
+  patterns.push({ icon: '📉', title: 'No baseline comparison', desc: 'Always beat Seasonal Naïve before claiming model value. This is the minimum bar.' });
+  return patterns.slice(0, 4);
+}
+
+// ─────────────────────────────────────────────
+//  SHOW RESULTS
+// ─────────────────────────────────────────────
+function showResults() {
+  document.getElementById('questionsSection').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+
+  const rec = recommend(answers);
+  const today = new Date().toISOString().split('T')[0];
+  const baselines = getBaselineSteps(rec);
+  const antiPatterns = getAntiPatterns(answers, rec);
+
+  const adrText = `## Architecture Decision Record
+
+**Decision**: ${rec.primary}
+**Date**: ${today}
+**Status**: Proposed
+
+### Context
+Problem characterized by the wizard:
+- Forecast horizon: ${answers.horizon}
+- Data frequency: ${answers.frequency}
+- Series count: ${answers.seriesCount}
+- Covariates: ${answers.covariates}
+- Output type: ${answers.output}
+- Interpretability: ${answers.interpretability}
+- Latency: ${answers.latency}
+- Data volume: ${answers.dataVolume}
+
+### Decision Drivers
+- Output type: ${answers.output} forecast required
+- Latency: ${answers.latency} inference budget
+- Interpretability: ${answers.interpretability} required by stakeholders
+- Series count: ${answers.seriesCount}
+
+### Considered Options
+
+1. **${rec.alt1.name}** — alternative: ${rec.alt1.why}
+2. **${rec.alt2.name}** — alternative: ${rec.alt2.why}
+3. **${rec.primary}** ← SELECTED — ${rec.tagline}
+
+### Consequences
+
+**Positive:**
+${rec.strengths.map(s => `  - ${s}`).join('\n')}
+
+**Negative / Risks:**
+${rec.risks.map(r => `  - ${r}`).join('\n')}
+
+**Mitigation:**
+  - Establish Seasonal Naïve and DLinear baselines before committing
+  - Run ablations on covariate subsets
+  - Monitor drift with held-out test window
+
+### Recommended Hyperparameters (Starting Point)
+${Object.entries(rec.hyperparams).map(([k,v]) => `  - ${k}: ${v}`).join('\n')}
+
+### Library
+  ${rec.library}
+
+### Success Metrics
+  - Primary: ${rec.metric.primary}
+  - Secondary: ${rec.metric.secondary}
+  - Guardrail: ${rec.metric.guardrail}
+`;
+
+  const html = `
+    <div class="fade-up">
+
+      <!-- HERO -->
+      <div class="arch-hero">
+        <div style="margin-bottom:6px">
+          <span class="tag tag-green">✅ Recommended Architecture</span>
+        </div>
+        <div class="arch-name">${rec.primary}</div>
+        <div class="arch-subtitle">${rec.tagline}</div>
+        <div class="arch-tags">
+          ${rec.tags.map(t => `<span class="tag tag-blue">${t}</span>`).join('')}
+          <span class="tag ${rec.gpuNeeded ? 'tag-orange' : 'tag-green'}">${rec.gpuNeeded ? '🖥️ GPU recommended' : '💻 CPU-friendly'}</span>
+          <span class="tag tag-purple">Complexity: ${rec.complexity}</span>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Primary Metric</div>
+          <div class="metric-value" style="font-size:0.88rem;color:var(--accent2)">${rec.metric.primary}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Secondary Metric</div>
+          <div class="metric-value" style="font-size:0.88rem;color:var(--accent)">${rec.metric.secondary}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Guardrail</div>
+          <div class="metric-value" style="font-size:0.88rem;color:var(--accent4)">${rec.metric.guardrail}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Library</div>
+          <div class="metric-value" style="font-size:0.8rem;color:var(--accent3)">${rec.library}</div>
+        </div>
+      </div>
+
+      <!-- ALTERNATIVES -->
+      <div class="card">
+        <div class="card-title">Considered Alternatives</div>
+        <h2>Why not these?</h2>
+        <div class="alt-cards">
+          <div class="alt-card">
+            <h4>${rec.alt1.name}</h4>
+            <div class="alt-why" style="background:rgba(255,166,87,0.05);border:1px solid rgba(255,166,87,0.2);color:var(--accent4)">
+              🔄 ${rec.alt1.why}
+            </div>
+          </div>
+          <div class="alt-card">
+            <h4>${rec.alt2.name}</h4>
+            <div class="alt-why" style="background:rgba(255,166,87,0.05);border:1px solid rgba(255,166,87,0.2);color:var(--accent4)">
+              🔄 ${rec.alt2.why}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADR -->
+      <div class="adr-block">
+        <div class="adr-block-header">📋 Architecture Decision Record (ADR)</div>
+        <div class="adr-content">
+          <pre class="adr-code" id="adrText">${adrText}</pre>
+        </div>
+      </div>
+
+      <!-- BASELINE ROADMAP -->
+      <div class="card">
+        <div class="card-title">Baseline Hierarchy</div>
+        <h2>Build up from simple → complex</h2>
+        <div class="baseline-steps">
+          ${baselines.map(s => `
+            <div class="baseline-step">
+              <div class="step-num ${s.status}">${s.num}</div>
+              <div class="step-info">
+                <h4>${s.label}</h4>
+                <p>${s.desc}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- ANTI-PATTERNS -->
+      <div class="card">
+        <div class="card-title">Common Anti-Patterns to Avoid</div>
+        <h2>Watch out for these</h2>
+        <div class="antipattern-list">
+          ${antiPatterns.map(ap => `
+            <div class="antipattern-item">
+              <span class="antipattern-icon">${ap.icon}</span>
+              <div>
+                <strong>${ap.title}</strong>
+                <p>${ap.desc}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- DOWNLOAD -->
+      <div class="download-row">
+        <button class="btn btn-success" onclick="downloadADR()">⬇️ Download ADR as .md</button>
+        <button class="restart-btn" onclick="restart()">↺ Start Over</button>
+      </div>
+
+    </div>
+  `;
+
+  const rs = document.getElementById('resultSection');
+  rs.classList.add('visible');
+  rs.innerHTML = html;
+  window._adrText = adrText;
+  window._archName = rec.primary;
+  rs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function downloadADR() {
+  const blob = new Blob([window._adrText], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ADR-${window._archName.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.md`;
+  a.click();
+}
+
+function restart() {
+  answers = {};
+  currentQ = 0;
+  document.getElementById('resultSection').classList.remove('visible');
+  document.getElementById('resultSection').innerHTML = '';
+  document.getElementById('questionsSection').style.display = '';
+  document.getElementById('progressWrap').style.display = '';
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderQuestion();
+</script>
+</body>
+</html>

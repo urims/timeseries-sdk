@@ -1,0 +1,28 @@
+# Claude internal files
+.claude/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Archives
+*.zip
+
+# Common Python/ML artifacts
+.env
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+experiments/
+*.keras
+*.h5
+*.pt
+*.ckpt

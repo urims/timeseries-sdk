@@ -1,0 +1,65 @@
+{
+  "framework": "ml-team-skills",
+  "evals": [
+    {
+      "skill": "explaining-for-stakeholders",
+      "test_prompts": [
+        {
+          "id": 1,
+          "prompt": "Our TFT model has MASE of 0.87, coverage_90 of 91%, and CRPS of 12.3. We need to present these results to the VP of Supply Chain who has no ML background. Explain what this means for their inventory planning.",
+          "expected_behavior": ["No technical acronyms without translation", "Business impact stated first", "Exactly one recommended action", "Uncertainty framed positively"]
+        },
+        {
+          "id": 2,
+          "prompt": "The model's prediction intervals widened significantly for Q4. The CFO is asking if the model is broken. Write an explanation.",
+          "expected_behavior": ["Reassurance with honesty", "Analogy used for prediction intervals", "No algorithm names", "Clear next step"]
+        },
+        {
+          "id": 3,
+          "prompt": "Explain to a product owner why our model performs worse on new products launched in the last 3 months.",
+          "expected_behavior": ["Cold-start concept explained without jargon", "Concrete business example", "Mitigation plan suggested"]
+        }
+      ]
+    },
+    {
+      "skill": "designing-ts-architectures",
+      "test_prompts": [
+        {
+          "id": 1,
+          "prompt": "We have 500 daily time series of retail demand, each with 2 years of history, plus weather and promotion features as known future covariates. We need interpretable probabilistic forecasts 14 days ahead. Which architecture should we use?",
+          "expected_behavior": ["Problem characterization completed", "TFT recommended with reasoning", "At least one alternative considered", "ADR template used", "Baseline hierarchy mentioned"]
+        },
+        {
+          "id": 2,
+          "prompt": "Should we use a Transformer or LSTM for our univariate short-term energy demand forecasting (24 hourly steps)?",
+          "expected_behavior": ["Neither blindly recommended", "DLinear/NLinear suggested as baseline", "Complexity-justification principle applied", "Specific comparison dimensions cited"]
+        },
+        {
+          "id": 3,
+          "prompt": "We just got a new client with only 3 months of weekly data (12 data points per series, 200 series). What can we do for forecasting?",
+          "expected_behavior": ["Foundation models recommended for zero-shot", "Data augmentation mentioned", "Limitations clearly stated", "Progressive strategy suggested"]
+        }
+      ]
+    },
+    {
+      "skill": "guarding-data-quality",
+      "test_prompts": [
+        {
+          "id": 1,
+          "prompt": "I just got a new dataset of hourly sensor readings. Before I start modeling, what should I check?",
+          "expected_behavior": ["Directs to run check_data_quality.py", "Covers completeness, outliers, temporal integrity", "Mentions stationarity", "Warns about leakage"]
+        },
+        {
+          "id": 2,
+          "prompt": "My sales data has 15% missing values and several large spikes during Black Friday. How should I handle this?",
+          "expected_behavior": ["Distinguishes real events from data errors", "Recommends not removing Black Friday spikes without investigation", "Missing data strategy tiered by gap length", "Does not recommend mean imputation"]
+        },
+        {
+          "id": 3,
+          "prompt": "The model's accuracy suddenly dropped last month. Could it be a data issue?",
+          "expected_behavior": ["Suggests checking for data drift", "Mentions distribution shift between train and recent data", "Recommends running quality checks on recent data window", "Connects to monitoring from validating-models"]
+        }
+      ]
+    }
+  ]
+}
